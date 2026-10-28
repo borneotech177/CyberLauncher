@@ -1,0 +1,30 @@
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+      - name: Siapkan source
+        run: |
+          if [ -f CyberLauncher.zip ]; then
+            unzip -q CyberLauncher.zip -d _src
+            D=$(dirname "$(find _src -name settings.gradle.kts | head -1)")
+          else
+            D=.
+          fi
+          echo "SRC=$D" >> $GITHUB_ENV
+      - run: gradle -p "$SRC" assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CyberLauncher-APK
+          path: ${{ env.SRC }}/app/build/outputs/apk/debug/*.apk
